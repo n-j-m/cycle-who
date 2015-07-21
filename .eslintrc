@@ -18,6 +18,7 @@
     "eol-last": 0,
     "quotes": [2, "double"],
     "comma-dangle": 0,
+    "no-script-url": 0,
     "react/jsx-boolean-value": 1,
     "react/jsx-quotes": 1,
     "react/jsx-no-undef": 1,

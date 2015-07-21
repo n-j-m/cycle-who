@@ -5,6 +5,8 @@ var mergeCommon = merge.bind(null, common);
 
 var BuildConstants = require("./build-constants");
 
+console.log("token:", process.env.PLAYGROUND_TOKEN);
+
 module.exports = mergeCommon({
   devTool: "eval",
   entry: [
@@ -16,7 +18,10 @@ module.exports = mergeCommon({
     ]
   },
   plugins: [
-    new webpack.NoErrorsPlugin()
+    new webpack.NoErrorsPlugin(),
+    new webpack.DefinePlugin({
+      GITHUB_TOKEN: JSON.stringify(process.env.PLAYGROUND_TOKEN)
+    })
   ],
   devServer: {
     stats: {
