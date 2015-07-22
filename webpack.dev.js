@@ -5,8 +5,6 @@ var mergeCommon = merge.bind(null, common);
 
 var BuildConstants = require("./build-constants");
 
-console.log("token:", process.env.PLAYGROUND_TOKEN);
-
 module.exports = mergeCommon({
   devTool: "eval",
   entry: [

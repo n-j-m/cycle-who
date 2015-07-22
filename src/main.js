@@ -11,12 +11,22 @@ const URL = "https://api.github.com/users";
 const TOKEN = GITHUB_TOKEN;
 /*eslint-enable no-undef*/
 
-
+/*eslint-disable no-unused-vars*/
 function log(label) {
   return (thing) => {
     console.log(`${label}:`, thing);
     return thing;
   };
+}
+/*eslint-enable no-unused-vars*/
+
+function createSuggestion(closeClick$, users$) {
+  return closeClick$
+    .startWith("startup click")
+    .combineLatest(
+      users$,
+      (click, users) => users[Math.floor(Math.random() * users.length)]
+    );
 }
 
 function main({ DOM, HTTP }) {
@@ -27,7 +37,6 @@ function main({ DOM, HTTP }) {
     .map(() => {
       let randomOffset = Math.floor(Math.random() * 500);
       let headers = {};
-      console.log("token:", TOKEN);
       if (TOKEN) {
         headers.Authorization = `token ${TOKEN}`;
       }
@@ -41,23 +50,20 @@ function main({ DOM, HTTP }) {
   let users$ = HTTP
     .filter(res$ => res$.request.url.indexOf(URL) === 0)
     .mergeAll()
-    .flatMap(res =>
-      Observable.range(0, 3)
-        .map(() => Math.floor(Math.random() * res.body.length))
-        .map(index => res.body[index])
-    )
-    .map(log("flatMapped"))
-    .scan([], (users, currentUser) => {
-      users.push(currentUser);
-      console.log("users:", users);
-      return users;
-    });
+    .map(res => res.body);
 
-  let userList$ = users$
-    .map(log("user list"))
-    .map(users => {
-      console.log("render:", users);
-      return h("div", [
+  let suggestion1$ = createSuggestion(DOM.get(".close1", "click"), users$);
+  let suggestion2$ = createSuggestion(DOM.get(".close2", "click"), users$);
+  let suggestion3$ = createSuggestion(DOM.get(".close3", "click"), users$);
+
+  let userList$ = Observable
+    .combineLatest(
+      suggestion1$,
+      suggestion2$,
+      suggestion3$,
+      (user1, user2, user3) => ({ user1, user2, user3 })
+    )
+    .map(({user1, user2, user3}) => h("div", [
         h("button.refresh.btn.btn-default", "Refresh"),
         h("table.table.table-hover", [
           h("thead", [
@@ -68,27 +74,55 @@ function main({ DOM, HTTP }) {
             ])
           ]),
           h("tbody", [
-            users === null ? "" : users.map((user, i) =>
-              h("tr", [
-                h("td", [
-                  h("a.close", {href: "javascript:void(0)", "data-index": i}, "x")
-                ]),
-                h("td", [
-                  h("img.img-responsive.img-circle", {
-                    src: user.avatar_url,
-                    style: {
-                      width: "48px",
-                      height: "48px"
-                    }
-                  })
-                ]),
-                h("td", user.login)
-              ])
-            )
+            h("tr", [
+              h("td", [
+                h("a.close1", {href: "javascript:void(0)"}, "x")
+              ]),
+              h("td", [
+                h("img.img-responsive.img-circle", {
+                  src: user1.avatar_url,
+                  style: {
+                    width: "48px",
+                    height: "48px"
+                  }
+                })
+              ]),
+              h("td", user1.login)
+            ]),
+            h("tr", [
+              h("td", [
+                h("a.close2", {href: "javascript:void(0)"}, "x")
+              ]),
+              h("td", [
+                h("img.img-responsive.img-circle", {
+                  src: user2.avatar_url,
+                  style: {
+                    width: "48px",
+                    height: "48px"
+                  }
+                })
+              ]),
+              h("td", user2.login)
+            ]),
+            h("tr", [
+              h("td", [
+                h("a.close3", {href: "javascript:void(0)"}, "x")
+              ]),
+              h("td", [
+                h("img.img-responsive.img-circle", {
+                  src: user3.avatar_url,
+                  style: {
+                    width: "48px",
+                    height: "48px"
+                  }
+                })
+              ]),
+              h("td", user3.login)
+            ])
           ])
         ])
-      ]);
-    });
+      ])
+    );
 
   return {
     DOM: userList$,
